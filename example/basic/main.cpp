@@ -1,21 +1,29 @@
-#include <iostream>
+#include <cacus.h>
 
+#include <iostream>
 #include <GLFW/glfw3.h>
 
-#include <cacus.h>
 
 using namespace std;
 
+/**
+ * A basic example showing how to create and init a window.
+ */
 int main() {
-	Cacus cacus;
-	cout << "Hello World!" << endl;
-
     glfwInit();
+
+	uint32_t glfwExtensionCount = 0;
+	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+	Cacus cacus(glfwExtensions, glfwExtensionCount);
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
 
-    while(!glfwWindowShouldClose(window)) {
+ 
+	cout << "Hello World!" << endl;
+
+    while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
     }
 

@@ -8,9 +8,12 @@ project(Cacus 	VERSION 1.0
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_library(cacus STATIC)
+find_package(Vulkan REQUIRED)
 
-target_include_directories(cacus PUBLIC include)
+add_library(cacus STATIC)
+target_link_libraries(cacus ${Vulkan_LIBRARIES})
+target_include_directories(cacus PUBLIC include ${Vulkan_INCLUDE_DIRS})
+
 set(CACUS_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_subdirectory(src)
