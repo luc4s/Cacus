@@ -9,9 +9,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_library(cacus STATIC)
+
 target_include_directories(cacus PUBLIC include)
+set(CACUS_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
 add_subdirectory(src)
 add_subdirectory(lib)
+
 
 # Examples
 add_subdirectory(example)
