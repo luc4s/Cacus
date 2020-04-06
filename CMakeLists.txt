@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_library(cacus STATIC)
 target_include_directories(cacus PUBLIC include)
 add_subdirectory(src)
+add_subdirectory(lib)
 
 # Examples
 add_subdirectory(example)
