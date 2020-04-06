@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.17)
 
 # set the project name
-project(Cacus)
+project(Cacus 	VERSION 1.0
+				DESCRIPTION "Vulkan rendering engine"
+				LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# add the executable
-add_executable(Cacus main.cpp)
+add_library(cacus STATIC)
+target_include_directories(cacus PUBLIC include)
+add_subdirectory(src)
+
+# Examples
+add_subdirectory(example)

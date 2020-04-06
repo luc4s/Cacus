@@ -1,0 +1,4 @@
+class Cacus {
+public:
+	Cacus();
+};
