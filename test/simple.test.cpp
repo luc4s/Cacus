@@ -5,18 +5,21 @@
 
 #include <GLFW/glfw3.h>
 
-TEST(SimpleTests, InitEmptyCacus) {
+#define WIDTH 800
+#define HEIGHT 600
+
+TEST(SimpleTests, EmptyCacus) {
   ASSERT_NO_THROW({
-    Cacus cacus;
+    Cacus cacus(WIDTH, HEIGHT);
   });
 }
 
 TEST(SimpleTests, InitInvalidCacus) {
   const char *extensions[1] = {
-    "\0"
+    ""
   };
   ASSERT_THROW({
-    Cacus cacus(extensions, 1);
+    Cacus cacus(WIDTH, HEIGHT, extensions, 1);
   }, std::runtime_error);
 }
 
@@ -25,6 +28,13 @@ TEST(SimpleTests, InitCacusGLFW) {
   const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
   ASSERT_NO_THROW({
-    Cacus cacus(glfwExtensions, glfwExtensionCount);
+    Cacus cacus(WIDTH, HEIGHT, glfwExtensions, glfwExtensionCount);
   });
+}
+
+TEST(SimpleTests, InitCacusWithoutSurface) {
+  ASSERT_THROW({
+    Cacus cacus(WIDTH, HEIGHT);
+    cacus.init();
+  }, std::runtime_error);
 }

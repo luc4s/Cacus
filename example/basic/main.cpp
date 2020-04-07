@@ -1,8 +1,12 @@
 #include <cacus.h>
 
 #include <iostream>
+
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define WIDTH 800
+#define HEIGHT 600
 
 using namespace std;
 
@@ -11,18 +15,22 @@ using namespace std;
  */
 int main() {
   glfwInit();
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan window", nullptr, nullptr);
 
   // Get GLFW extensions
   uint32_t glfwExtensionCount = 0;
   const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-  Cacus cacus(glfwExtensions, glfwExtensionCount);
+  Cacus cacus(WIDTH, HEIGHT, glfwExtensions, glfwExtensionCount);
 
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  GLFWwindow* window = glfwCreateWindow(800, 600, "Vulkan window", nullptr, nullptr);
-
+  VkSurfaceKHR surface;
+  glfwCreateWindowSurface(cacus.getInstance(), window, nullptr, &surface);
+  cacus.setSurface(surface);
+  cacus.init();
  
-  cout << "Hello World!" << endl;
+  cout << "Ready" << endl;
 
   while (!glfwWindowShouldClose(window)) {
       glfwPollEvents();
