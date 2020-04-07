@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.17)
 add_executable(basic main.cpp)
 
 find_package(glfw3 REQUIRED)

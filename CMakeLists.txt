@@ -22,3 +22,12 @@ add_subdirectory(lib)
 
 # Examples
 add_subdirectory(example)
+
+# Tests
+enable_testing()
+
+add_subdirectory(test)
+
+add_test(
+    NAME unit_tests
+    COMMAND unit_tests)
