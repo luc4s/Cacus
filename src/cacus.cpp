@@ -204,7 +204,7 @@ void Cacus::init() {
 
   if (vkCreateSwapchainKHR(device, &swapChainCreateInfo, nullptr, &swapChain) != VK_SUCCESS)
       throw std::runtime_error("Failed to create swap chain!");
-  
+
   // Get swap chain images
   vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
   swapChainImages.resize(imageCount);
