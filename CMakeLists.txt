@@ -12,7 +12,7 @@ find_package(Vulkan REQUIRED)
 
 add_library(cacus STATIC)
 target_link_libraries(cacus ${Vulkan_LIBRARIES})
-target_include_directories(cacus PUBLIC include ${Vulkan_INCLUDE_DIRS})
+target_include_directories(cacus PUBLIC include PRIVATE ${Vulkan_INCLUDE_DIRS})
 
 set(CACUS_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
