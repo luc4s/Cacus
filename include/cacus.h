@@ -2,11 +2,24 @@
 
 class Cacus {
 public:
-	Cacus(const char **extensionNames, size_t extensionCount);
-	~Cacus();
+
+  /**
+   * Default constructor
+   */
+  Cacus();
+
+  /**
+   * @param extensionNames Array of required extensions
+   * @param extensionCount Number of extensions
+   * @throw Error if extensions are not supported
+   */
+  Cacus(const char **extensionNames, size_t extensionCount);
+
+  ~Cacus();
 
 private:
-	bool checkValidationLayersSupport() const;
+  bool checkValidationLayersSupport() const;
+  void createInstance();
 
-	VkInstance instance;
+  VkInstance instance;
 };
