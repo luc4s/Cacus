@@ -89,28 +89,19 @@ Cacus::Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_
 
 Cacus::~Cacus() {
   vkDeviceWaitIdle(device);
-  if (initialized) {
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-      vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
-      vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
-      vkDestroyFence(device, inFlightFences[i], nullptr);
-    }
-    vkDestroyCommandPool(device, commandPool, nullptr);
+  cleanupSwapChain();
 
-    for (auto &framebuffer : swapChainFramebuffers)
-      vkDestroyFramebuffer(device, framebuffer, nullptr);
-
-    vkDestroyPipeline(device, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    vkDestroyRenderPass(device, renderPass, nullptr);
-
-    for (auto &imageView : swapChainImageViews)
-      vkDestroyImageView(device, imageView, nullptr);
-
-    vkDestroySwapchainKHR(device, swapChain, nullptr);
-    vkDestroySurfaceKHR(instance, surface, nullptr);
-    vkDestroyDevice(device, nullptr);
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+    vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+    vkDestroyFence(device, inFlightFences[i], nullptr);
   }
+
+  vkDestroyCommandPool(device, commandPool, nullptr);
+
+  vkDestroyDevice(device, nullptr);
+
+  vkDestroySurfaceKHR(instance, surface, nullptr);
   vkDestroyInstance(instance, nullptr);
 }
 
@@ -181,7 +172,9 @@ void Cacus::init() {
   // Retrieve queue handles
   vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
   vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+}
 
+void Cacus::createGraphicsPipeline() {
   // Create swap chain
   SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
@@ -206,6 +199,12 @@ void Cacus::init() {
   swapChainCreateInfo.imageExtent = extent;
   swapChainCreateInfo.imageArrayLayers = 1;
   swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+  QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+  uint32_t queueFamilyIndices[] = {
+    indices.graphicsFamily.value(),
+    indices.presentFamily.value()
+  };
 
   if (indices.graphicsFamily != indices.presentFamily) {
       swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -255,11 +254,10 @@ void Cacus::init() {
     if (vkCreateImageView(device, &imageViewCreateInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS)
       throw std::runtime_error("failed to create image views!");
   }
-}
 
-void Cacus::createGraphicsPipeline(std::vector<char> vertex, std::vector<char> fragment) {
-  VkShaderModule vertShaderModule = createShaderModule(vertex);
-  VkShaderModule fragShaderModule = createShaderModule(fragment);
+  // Create graphics pipeline
+  VkShaderModule vertShaderModule = createShaderModule(vertexShader);
+  VkShaderModule fragShaderModule = createShaderModule(fragmentShader);
 
   VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
   vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -491,7 +489,9 @@ void Cacus::setupDrawing() {
     if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
       throw std::runtime_error("failed to record command buffer!");
   }
+}
 
+void Cacus::createSyncObjects() {
   // Setup semaphores
   imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -540,7 +540,7 @@ void Cacus::draw() {
   VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
-  
+
   vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
   if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS)
@@ -561,6 +561,35 @@ void Cacus::draw() {
   vkQueuePresentKHR(presentQueue, &presentInfo);
   vkQueueWaitIdle(presentQueue);
   currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void Cacus::recreateSwapChain(uint32_t newWidth, uint32_t newHeight) {
+  vkDeviceWaitIdle(device);
+  cleanupSwapChain();
+
+  width = newWidth;
+  height = newHeight;
+
+  // Recreate swap chain
+  createGraphicsPipeline();
+  setupDrawing();
+}
+
+void Cacus::cleanupSwapChain() {
+  // Cleanup swap chain
+  for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
+    vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+
+  vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+  vkDestroyPipeline(device, graphicsPipeline, nullptr);
+  vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+  vkDestroyRenderPass(device, renderPass, nullptr);
+
+  for (size_t i = 0; i < swapChainImageViews.size(); i++)
+    vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+
+  vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
 
 VkShaderModule Cacus::createShaderModule(const std::vector<char> &code) const {

@@ -50,11 +50,7 @@ int main() {
 
   VkSurfaceKHR surface;
   glfwCreateWindowSurface(cacus.getInstance(), window, nullptr, &surface);
-  cacus.setSurface(surface);
-  cacus.init();
-
-  cacus.createGraphicsPipeline(vertShaderCode, fragShaderCode);
-  cacus.setupDrawing();
+  cacus.setup(surface, vertShaderCode, fragShaderCode);
  
   cout << "Ready" << endl;
 

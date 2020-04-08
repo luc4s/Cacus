@@ -33,11 +33,6 @@ public:
   Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_t extensionCount);
 
   /**
-   * Initializes Vulkan, surface must have been set.
-   */
-  void init();
-
-  /**
    * @return Vulkan instance pointer
    */
   VkInstance getInstance() {
@@ -57,15 +52,41 @@ public:
   ~Cacus();
 
   /**
-   * Temporary functions that will be removed in the near future.
+   * Performs setup of Vulkan (to remove)
    */
-  void createGraphicsPipeline(std::vector<char> vertex, std::vector<char> fragment);
-
-  void setupDrawing();
+  void setup( VkSurfaceKHR newSurface,
+              std::vector<char> vertex,
+              std::vector<char> fragment) {
+    surface = newSurface;
+    vertexShader = vertex;
+    fragmentShader = fragment;
+    init();
+    createGraphicsPipeline();
+    setupDrawing();
+    createSyncObjects();
+  }
 
   void draw();
 
+  void recreateSwapChain(uint32_t newWidth, uint32_t newHeight);
+
 private:
+  /**
+   * Temporary functions that will be removed in the near future.
+   */
+  void init();
+
+  void createGraphicsPipeline();
+
+  void setupDrawing();
+
+  void createSyncObjects();
+
+  /**
+   * Cleanup the swap chain
+   */
+  void cleanupSwapChain();
+
   /**
    * @return True if validation layers are available, false otherwise.
    */
@@ -125,6 +146,9 @@ private:
   uint32_t width;
   uint32_t height;
   size_t currentFrame;
+
+  std::vector<char> vertexShader;
+  std::vector<char> fragmentShader;
 
   VkInstance instance;
   VkPhysicalDevice physicalDevice;
