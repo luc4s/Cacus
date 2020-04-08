@@ -62,11 +62,16 @@ public:
     fragmentShader = fragment;
     init();
     createGraphicsPipeline();
+    createCommandPool();
     setupDrawing();
     createSyncObjects();
   }
 
-  void draw();
+  /**
+   * Draws on surface.
+   * @return true if swap chain must be recreated.
+   */
+  bool draw();
 
   void recreateSwapChain(uint32_t newWidth, uint32_t newHeight);
 
@@ -79,6 +84,8 @@ private:
   void createGraphicsPipeline();
 
   void setupDrawing();
+
+  void createCommandPool();
 
   void createSyncObjects();
 

@@ -89,6 +89,7 @@ Cacus::Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_
 
 Cacus::~Cacus() {
   vkDeviceWaitIdle(device);
+
   cleanupSwapChain();
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -98,11 +99,26 @@ Cacus::~Cacus() {
   }
 
   vkDestroyCommandPool(device, commandPool, nullptr);
-
   vkDestroyDevice(device, nullptr);
 
   vkDestroySurfaceKHR(instance, surface, nullptr);
   vkDestroyInstance(instance, nullptr);
+}
+
+void Cacus::cleanupSwapChain() {
+  for (auto framebuffer : swapChainFramebuffers)
+    vkDestroyFramebuffer(device, framebuffer, nullptr);
+
+  vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+  vkDestroyPipeline(device, graphicsPipeline, nullptr);
+  vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+  vkDestroyRenderPass(device, renderPass, nullptr);
+
+  for (auto imageView : swapChainImageViews)
+    vkDestroyImageView(device, imageView, nullptr);
+
+  vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
 
 void Cacus::init() {
@@ -172,6 +188,18 @@ void Cacus::init() {
   // Retrieve queue handles
   vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
   vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+}
+
+void Cacus::createCommandPool() {
+  // Create command pool
+  QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
+
+  VkCommandPoolCreateInfo poolInfo = {};
+  poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+  if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
+    throw std::runtime_error("Failed to create command pool!");
 }
 
 void Cacus::createGraphicsPipeline() {
@@ -442,17 +470,6 @@ void Cacus::setupDrawing() {
       throw std::runtime_error("Failed to create framebuffer!");
   }
 
-  // Create command pool
-  QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
-
-  VkCommandPoolCreateInfo poolInfo = {};
-  poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-  poolInfo.flags = 0; // Optional
-
-  if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
-    throw std::runtime_error("Failed to create command pool!");
-
   // Create command buffers
   commandBuffers.resize(swapChainFramebuffers.size());
   VkCommandBufferAllocateInfo allocInfo = {};
@@ -514,11 +531,17 @@ void Cacus::createSyncObjects() {
   }
 }
 
-void Cacus::draw() {
+bool Cacus::draw() {
   vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
   uint32_t imageIndex;
-  vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+  VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+  if (result == VK_ERROR_OUT_OF_DATE_KHR)
+    return true;
+  else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+    throw std::runtime_error("failed to acquire swap chain image!");
+
   // Check if a previous frame is using this image (i.e. there is its fence to wait on)
   if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
       vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
@@ -558,13 +581,23 @@ void Cacus::draw() {
   presentInfo.pImageIndices = &imageIndex;
 
   presentInfo.pResults = nullptr; // Optional
-  vkQueuePresentKHR(presentQueue, &presentInfo);
-  vkQueueWaitIdle(presentQueue);
+  result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+    return true;
+  else if (result != VK_SUCCESS)
+    throw std::runtime_error("failed to present swap chain image!");
+
   currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+  return false;
 }
 
 void Cacus::recreateSwapChain(uint32_t newWidth, uint32_t newHeight) {
+  if (newWidth == 0 || newHeight == 0)
+    return;
+
   vkDeviceWaitIdle(device);
+
   cleanupSwapChain();
 
   width = newWidth;
@@ -573,23 +606,6 @@ void Cacus::recreateSwapChain(uint32_t newWidth, uint32_t newHeight) {
   // Recreate swap chain
   createGraphicsPipeline();
   setupDrawing();
-}
-
-void Cacus::cleanupSwapChain() {
-  // Cleanup swap chain
-  for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
-    vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
-
-  vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-
-  vkDestroyPipeline(device, graphicsPipeline, nullptr);
-  vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-  vkDestroyRenderPass(device, renderPass, nullptr);
-
-  for (size_t i = 0; i < swapChainImageViews.size(); i++)
-    vkDestroyImageView(device, swapChainImageViews[i], nullptr);
-
-  vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
 
 VkShaderModule Cacus::createShaderModule(const std::vector<char> &code) const {

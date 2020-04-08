@@ -29,6 +29,11 @@ static std::vector<char> readFile(const std::string &filename) {
   return buffer;
 }
 
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+  auto cacus = reinterpret_cast<Cacus*>(glfwGetWindowUserPointer(window));
+  cacus->recreateSwapChain(width, height);
+}
+
 /**
  * A basic example showing how to create and init a window.
  */
@@ -38,7 +43,6 @@ int main() {
   auto fragShaderCode = readFile("./frag.spv");
 
   glfwInit();
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan window", nullptr, nullptr);
 
@@ -48,6 +52,9 @@ int main() {
 
   Cacus cacus(WIDTH, HEIGHT, glfwExtensions, glfwExtensionCount);
 
+  glfwSetWindowUserPointer(window, &cacus);
+  glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+
   VkSurfaceKHR surface;
   glfwCreateWindowSurface(cacus.getInstance(), window, nullptr, &surface);
   cacus.setup(surface, vertShaderCode, fragShaderCode);
@@ -56,7 +63,13 @@ int main() {
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
-    cacus.draw();
+
+    // Recreate swap chain in case of window resize.
+    if (cacus.draw()) {
+      int width, height;
+      glfwGetFramebufferSize(window, &width, &height);
+      cacus.recreateSwapChain(width, height);
+    }
   }
 
   glfwDestroyWindow(window);
