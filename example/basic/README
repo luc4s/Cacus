@@ -2,6 +2,7 @@
 
 ## Description
 Opens up a window with GLFW.
+Shaders are compiled externally using glslc.
 
 ## Dependencies
 - GLFW

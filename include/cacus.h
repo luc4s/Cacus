@@ -51,6 +51,16 @@ public:
     surface = newSurface;
   }
 
+  /**
+   * Temporary function. Soon to be removed.
+   */
+  void createGraphicsPipeline(std::vector<char> vertex, std::vector<char> fragment);
+
+  /**
+   * Temporary, will be removed in the near future.
+   */
+  void createFrameBuffers();
+
   ~Cacus();
 
 private:
@@ -101,6 +111,13 @@ private:
    */
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const;
 
+  /**
+   * Create a shader module from byte code.
+   * @param Bytecode
+   * @return Shader module
+   */
+  VkShaderModule createShaderModule(const std::vector<char> &code) const;
+
   bool initialized;
 
   uint32_t width;
@@ -116,7 +133,13 @@ private:
 
   VkFormat swapChainImageFormat;
   VkExtent2D swapChainExtent;
-  
+
   std::vector<VkImage> swapChainImages;
   std::vector<VkImageView> swapChainImageViews;
+
+  VkPipelineLayout pipelineLayout;
+  VkRenderPass renderPass;
+  VkPipeline graphicsPipeline;
+
+  std::vector<VkFramebuffer> swapChainFramebuffers;
 };

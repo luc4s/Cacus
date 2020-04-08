@@ -5,15 +5,38 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <fstream>
+#include <vector>
+
 #define WIDTH 800
 #define HEIGHT 600
 
 using namespace std;
 
+static std::vector<char> readFile(const std::string &filename) {
+  std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+  if (!file.is_open())
+    throw std::runtime_error("Failed to open file!");
+
+  size_t fileSize = (size_t) file.tellg();
+  std::vector<char> buffer(fileSize);
+  
+  file.seekg(0);
+  file.read(buffer.data(), fileSize);
+
+  file.close();
+  return buffer;
+}
+
 /**
  * A basic example showing how to create and init a window.
  */
 int main() {
+  // Read shader files
+  auto vertShaderCode = readFile("./vert.spv");
+  auto fragShaderCode = readFile("./frag.spv");
+
   glfwInit();
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -29,6 +52,9 @@ int main() {
   glfwCreateWindowSurface(cacus.getInstance(), window, nullptr, &surface);
   cacus.setSurface(surface);
   cacus.init();
+
+  cacus.createGraphicsPipeline(vertShaderCode, fragShaderCode);
+  cacus.createFrameBuffers();
  
   cout << "Ready" << endl;
 
