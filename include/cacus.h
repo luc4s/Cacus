@@ -49,6 +49,12 @@ typedef struct VertexStruct {
   }
 } Vertex;
 
+typedef struct UniformBufferObjectStruct {
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+} UniformBufferObject;
+
 class Cacus {
 public:
 
@@ -78,6 +84,16 @@ public:
     surface = newSurface;
   }
 
+  void getDimensions(int &outWidth, int &outHeight) {
+    outWidth = width;
+    outHeight = height;
+  }
+
+  /**
+   * Set transform of current shape.
+   */
+  void setTransform(const glm::mat4 &model, const glm::mat4 &view, const glm::mat4 &proj);
+
   /**
    * Destructor.
    */
@@ -93,6 +109,7 @@ public:
     vertexShader = vertex;
     fragmentShader = fragment;
     init();
+    createDescriptorSetLayout();
     createGraphicsPipeline();
     createCommandPool();
     setupDrawing();
@@ -134,6 +151,10 @@ private:
   void createSyncObjects();
 
   void createCommandBuffers();
+
+  void createDescriptorSetLayout();
+
+  void updateUniformBuffer(uint32_t currentImage);
 
   /**
    * Creates a buffer.
@@ -214,10 +235,12 @@ private:
 
   uint32_t width;
   uint32_t height;
+
   size_t currentFrame;
 
   std::vector<Vertex> vertices;
   std::vector<uint16_t> indices;
+  UniformBufferObject ubo;
 
   std::vector<char> vertexShader;
   std::vector<char> fragmentShader;
@@ -236,6 +259,7 @@ private:
   std::vector<VkImage> swapChainImages;
   std::vector<VkImageView> swapChainImageViews;
 
+  VkDescriptorSetLayout descriptorSetLayout;
   VkPipelineLayout pipelineLayout;
   VkRenderPass renderPass;
   VkPipeline graphicsPipeline;
@@ -254,4 +278,10 @@ private:
   VkDeviceMemory vertexBufferMemory;
   VkBuffer indexBuffer;
   VkDeviceMemory indexBufferMemory;
+
+  std::vector<VkBuffer> uniformBuffers;
+  std::vector<VkDeviceMemory> uniformBuffersMemory;
+
+  VkDescriptorPool descriptorPool;
+  std::vector<VkDescriptorSet> descriptorSets;
 };

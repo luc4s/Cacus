@@ -2,7 +2,11 @@
 
 #include <iostream>
 
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <chrono>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -74,9 +78,30 @@ int main() {
   cacus.setup(surface, vertShaderCode, fragShaderCode);
   cacus.createMeshBuffers(vertices, indices);
 
+  const auto startTime = std::chrono::high_resolution_clock::now();
+
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
 
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    // Compute transforms
+    int width, height;
+    cacus.getDimensions(width, height);
+
+    glm::mat4 proj = glm::perspective(
+      glm::radians(45.0f), width / (float) height, 0.1f, 10.0f);
+    proj[1][1] *= -1;
+
+    const glm::mat4 model = glm::rotate(
+      glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    
+    const glm::mat4 view = glm::lookAt(
+      glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    cacus.setTransform(model, view, proj);
+  
     // Recreate swap chain in case of window resize.
     if (cacus.draw()) {
       int width, height;

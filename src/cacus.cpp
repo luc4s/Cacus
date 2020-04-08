@@ -31,6 +31,7 @@ Cacus::Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_
   height(height),
   currentFrame(0)
 {
+  ubo = {};
   // Check if required extensions are available
   if (extensionCount > 0) {
     uint32_t vkCount = 0;
@@ -92,6 +93,8 @@ Cacus::~Cacus() {
 
   cleanupSwapChain();
 
+  vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+
   vkDestroyBuffer(device, indexBuffer, nullptr);
   vkFreeMemory(device, indexBufferMemory, nullptr);
 
@@ -125,6 +128,13 @@ void Cacus::cleanupSwapChain() {
     vkDestroyImageView(device, imageView, nullptr);
 
   vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+  for (size_t i = 0; i < swapChainImages.size(); i++) {
+    vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+    vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+  }
+
+  vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 }
 
 void Cacus::init() {
@@ -328,9 +338,9 @@ void Cacus::createGraphicsPipeline() {
   rasterizer.rasterizerDiscardEnable = VK_FALSE;
   rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
   rasterizer.lineWidth = 1.0f;
-  rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-  rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
   rasterizer.depthBiasEnable = VK_FALSE;
+  rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+  rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 
   VkPipelineMultisampleStateCreateInfo multisampling = {};
   multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -383,10 +393,10 @@ void Cacus::createGraphicsPipeline() {
 
   VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutInfo.setLayoutCount = 0; // Optional
-  pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
   pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
   pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+  pipelineLayoutInfo.setLayoutCount = 1;
+  pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
   if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
       throw std::runtime_error("failed to create pipeline layout!");
@@ -456,6 +466,24 @@ void Cacus::createGraphicsPipeline() {
 
   vkDestroyShaderModule(device, fragShaderModule, nullptr);
   vkDestroyShaderModule(device, vertShaderModule, nullptr);
+}
+
+void Cacus::createDescriptorSetLayout() {
+  // Create descriptor set layout
+  VkDescriptorSetLayoutBinding uboLayoutBinding = {};
+  uboLayoutBinding.binding = 0;
+  uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  uboLayoutBinding.descriptorCount = 1;
+  uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
+
+  VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+  layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  layoutInfo.bindingCount = 1;
+  layoutInfo.pBindings = &uboLayoutBinding;
+
+  if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+    throw std::runtime_error("failed to create descriptor set layout!");
 }
 
 void Cacus::setupDrawing() {
@@ -603,6 +631,7 @@ void Cacus::createMeshBuffers(
 
   vkDestroyBuffer(device, stagingBuffer, nullptr);
   vkFreeMemory(device, stagingBufferMemory, nullptr);
+
   createCommandBuffers();
 }
 
@@ -630,6 +659,69 @@ void Cacus::createSyncObjects() {
 }
 
 void Cacus::createCommandBuffers() {
+  // Create uniform buffers
+  VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+  uniformBuffers.resize(swapChainImages.size());
+  uniformBuffersMemory.resize(swapChainImages.size());
+
+  for (size_t i = 0; i < swapChainImages.size(); i++) {
+    createBuffer(
+      bufferSize,
+      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+      uniformBuffers[i],
+      uniformBuffersMemory[i]);
+  }
+
+  // Create descriptor pools
+  VkDescriptorPoolSize poolSize = {};
+  poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  poolSize.descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+
+  VkDescriptorPoolCreateInfo poolInfo = {};
+  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  poolInfo.poolSizeCount = 1;
+  poolInfo.pPoolSizes = &poolSize;
+  poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+
+  if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+    throw std::runtime_error("Failed to create descriptor pool!");
+
+  // Create descriptor sets
+  std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
+  VkDescriptorSetAllocateInfo allocInfo = {};
+  allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  allocInfo.descriptorPool = descriptorPool;
+  allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
+  allocInfo.pSetLayouts = layouts.data();
+
+  descriptorSets.resize(swapChainImages.size());
+  if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+    throw std::runtime_error("failed to allocate descriptor sets!");
+
+  for (size_t i = 0; i < swapChainImages.size(); i++) {
+    VkDescriptorBufferInfo bufferInfo = {};
+    bufferInfo.buffer = uniformBuffers[i];
+    bufferInfo.offset = 0;
+    bufferInfo.range = sizeof(UniformBufferObject);
+
+    VkWriteDescriptorSet descriptorWrite = {};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = descriptorSets[i];
+    descriptorWrite.dstBinding = 0;
+    descriptorWrite.dstArrayElement = 0;
+
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrite.descriptorCount = 1;
+
+    descriptorWrite.pBufferInfo = &bufferInfo;
+    descriptorWrite.pImageInfo = nullptr; // Optional
+    descriptorWrite.pTexelBufferView = nullptr; // Optional
+
+    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+  }
+
   // Create command buffers
   commandBuffers.resize(swapChainFramebuffers.size());
   VkCommandBufferAllocateInfo commandBufferAllocInfo = {};
@@ -668,6 +760,8 @@ void Cacus::createCommandBuffers() {
     vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
     vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
     
+    vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
+
     vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffers[i]);
@@ -676,11 +770,30 @@ void Cacus::createCommandBuffers() {
   }
 }
 
+void Cacus::setTransform(const glm::mat4 &model, const glm::mat4 &view, const glm::mat4 &proj) {
+  ubo.model = model;
+  ubo.view = view;
+  ubo.proj = proj;
+}
+
+void Cacus::updateUniformBuffer(uint32_t currentImage) {
+  void* data;
+  vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
+      memcpy(data, &ubo, sizeof(ubo));
+  vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
+}
+
 bool Cacus::draw() {
   vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
   uint32_t imageIndex;
-  VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+  VkResult result = vkAcquireNextImageKHR(
+    device,
+    swapChain,
+    UINT64_MAX,
+    imageAvailableSemaphores[currentFrame],
+    VK_NULL_HANDLE,
+    &imageIndex);
 
   if (result == VK_ERROR_OUT_OF_DATE_KHR)
     return true;
@@ -693,6 +806,8 @@ bool Cacus::draw() {
 
   // Mark the image as now being in use by this frame
   imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+
+  updateUniformBuffer(imageIndex);
 
   VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
