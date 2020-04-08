@@ -123,6 +123,18 @@ private:
 
   void createSyncObjects();
 
+  void createCommandBuffers();
+
+  /**
+   * Creates a buffer.
+   */
+  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+
+  /**
+   * Copy buffers.
+   */
+  void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
   /**
    * Returns the type of memory depending on application and buffer requirements
    */
@@ -186,6 +198,7 @@ private:
    * @return Shader module
    */
   VkShaderModule createShaderModule(const std::vector<char> &code) const;
+
 
   bool initialized;
 
