@@ -1,6 +1,9 @@
 #include <vulkan/vulkan.h>
 #include <optional>
 #include <vector>
+#include <array>
+
+#include <glm/glm.hpp>
 
 typedef struct QueueFamilyIndicesStruct {
   std::optional<uint32_t> graphicsFamily;
@@ -16,6 +19,35 @@ typedef struct SwapChainSupportDetailsStruct {
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 } SwapChainSupportDetails ;
+
+
+typedef struct VertexStruct {
+  glm::vec2 pos;
+  glm::vec3 color;
+
+  static VkVertexInputBindingDescription getBindingDescription() {
+    VkVertexInputBindingDescription bindingDescription = {};
+
+    bindingDescription.binding = 0;
+    bindingDescription.stride = sizeof(VertexStruct);
+    bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    return bindingDescription;
+  }
+
+  static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+    std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+    attributeDescriptions[0].binding = 0;
+    attributeDescriptions[0].location = 0;
+    attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[0].offset = offsetof(VertexStruct, pos);
+    attributeDescriptions[1].binding = 0;
+    attributeDescriptions[1].location = 1;
+    attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+    attributeDescriptions[1].offset = offsetof(VertexStruct, color);
+    return attributeDescriptions;
+  }
+} Vertex;
 
 class Cacus {
 public:
@@ -75,6 +107,8 @@ public:
 
   void recreateSwapChain(uint32_t newWidth, uint32_t newHeight);
 
+  void createVertexBuffer(const std::vector<Vertex> &vertices);
+
 private:
   /**
    * Temporary functions that will be removed in the near future.
@@ -88,6 +122,11 @@ private:
   void createCommandPool();
 
   void createSyncObjects();
+
+  /**
+   * Returns the type of memory depending on application and buffer requirements
+   */
+  uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
   /**
    * Cleanup the swap chain
@@ -154,6 +193,8 @@ private:
   uint32_t height;
   size_t currentFrame;
 
+  std::vector<Vertex> vertices;
+
   std::vector<char> vertexShader;
   std::vector<char> fragmentShader;
 
@@ -184,4 +225,7 @@ private:
   std::vector<VkSemaphore> renderFinishedSemaphores;
   std::vector<VkFence> inFlightFences;
   std::vector<VkFence> imagesInFlight;
+
+  VkBuffer vertexBuffer;
+  VkDeviceMemory vertexBufferMemory;
 };

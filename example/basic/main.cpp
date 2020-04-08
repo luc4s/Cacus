@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <glm/glm.hpp>
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -57,9 +59,15 @@ int main() {
 
   VkSurfaceKHR surface;
   glfwCreateWindowSurface(cacus.getInstance(), window, nullptr, &surface);
+
+  const std::vector<Vertex> vertices = {
+    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+  };
+
   cacus.setup(surface, vertShaderCode, fragShaderCode);
- 
-  cout << "Ready" << endl;
+  cacus.createVertexBuffer(vertices);
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
