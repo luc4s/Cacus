@@ -105,9 +105,19 @@ public:
    */
   bool draw();
 
+  /**
+   * Recreate the swap chain with new dimensions.
+   */
   void recreateSwapChain(uint32_t newWidth, uint32_t newHeight);
 
-  void createVertexBuffer(const std::vector<Vertex> &vertices);
+  /**
+   * Create vertex an index buffers for drawing shapes
+   * @param newVertices vertices
+   * @param newIndices indices
+   */
+  void createMeshBuffers(
+    const std::vector<Vertex> &newVertices,
+    const std::vector<uint16_t> &newIndices);
 
 private:
   /**
@@ -207,6 +217,7 @@ private:
   size_t currentFrame;
 
   std::vector<Vertex> vertices;
+  std::vector<uint16_t> indices;
 
   std::vector<char> vertexShader;
   std::vector<char> fragmentShader;
@@ -241,4 +252,6 @@ private:
 
   VkBuffer vertexBuffer;
   VkDeviceMemory vertexBufferMemory;
+  VkBuffer indexBuffer;
+  VkDeviceMemory indexBufferMemory;
 };
