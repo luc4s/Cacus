@@ -54,7 +54,7 @@ int main() {
   cacus.init();
 
   cacus.createGraphicsPipeline(vertShaderCode, fragShaderCode);
-  cacus.createFrameBuffers();
+  cacus.setupDrawing();
  
   cout << "Ready" << endl;
 

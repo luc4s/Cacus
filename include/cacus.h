@@ -59,7 +59,7 @@ public:
   /**
    * Temporary, will be removed in the near future.
    */
-  void createFrameBuffers();
+  void setupDrawing();
 
   ~Cacus();
 
@@ -142,4 +142,7 @@ private:
   VkPipeline graphicsPipeline;
 
   std::vector<VkFramebuffer> swapChainFramebuffers;
+
+  VkCommandPool commandPool;
+  std::vector<VkCommandBuffer> commandBuffers;
 };
