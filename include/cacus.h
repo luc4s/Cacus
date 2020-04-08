@@ -21,7 +21,7 @@ class Cacus {
 public:
 
   /**
-   * Default constructor
+   * Constructor
    */
   Cacus(uint32_t width, uint32_t height);
 
@@ -52,16 +52,18 @@ public:
   }
 
   /**
-   * Temporary function. Soon to be removed.
+   * Destructor.
+   */
+  ~Cacus();
+
+  /**
+   * Temporary functions that will be removed in the near future.
    */
   void createGraphicsPipeline(std::vector<char> vertex, std::vector<char> fragment);
 
-  /**
-   * Temporary, will be removed in the near future.
-   */
   void setupDrawing();
 
-  ~Cacus();
+  void draw();
 
 private:
   /**
@@ -122,6 +124,7 @@ private:
 
   uint32_t width;
   uint32_t height;
+  size_t currentFrame;
 
   VkInstance instance;
   VkPhysicalDevice physicalDevice;
@@ -145,4 +148,9 @@ private:
 
   VkCommandPool commandPool;
   std::vector<VkCommandBuffer> commandBuffers;
+
+  std::vector<VkSemaphore> imageAvailableSemaphores;
+  std::vector<VkSemaphore> renderFinishedSemaphores;
+  std::vector<VkFence> inFlightFences;
+  std::vector<VkFence> imagesInFlight;
 };

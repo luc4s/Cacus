@@ -59,7 +59,8 @@ int main() {
   cout << "Ready" << endl;
 
   while (!glfwWindowShouldClose(window)) {
-      glfwPollEvents();
+    glfwPollEvents();
+    cacus.draw();
   }
 
   glfwDestroyWindow(window);
