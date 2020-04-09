@@ -24,6 +24,7 @@ typedef struct SwapChainSupportDetailsStruct {
 typedef struct VertexStruct {
   glm::vec2 pos;
   glm::vec3 color;
+  glm::vec2 texCoord;
 
   static VkVertexInputBindingDescription getBindingDescription() {
     VkVertexInputBindingDescription bindingDescription = {};
@@ -35,16 +36,24 @@ typedef struct VertexStruct {
     return bindingDescription;
   }
 
-  static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-    std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+  static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+    std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
+
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
     attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
     attributeDescriptions[0].offset = offsetof(VertexStruct, pos);
+
     attributeDescriptions[1].binding = 0;
     attributeDescriptions[1].location = 1;
     attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
     attributeDescriptions[1].offset = offsetof(VertexStruct, color);
+
+    attributeDescriptions[2].binding = 0;
+    attributeDescriptions[2].location = 2;
+    attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[2].offset = offsetof(VertexStruct, texCoord);
+
     return attributeDescriptions;
   }
 } Vertex;
@@ -111,9 +120,8 @@ public:
     init();
     createDescriptorSetLayout();
     createGraphicsPipeline();
+    createFrameBuffers();
     createCommandPool();
-    setupDrawing();
-    createSyncObjects();
   }
 
   /**
@@ -146,7 +154,7 @@ private:
 
   void createGraphicsPipeline();
 
-  void setupDrawing();
+  void createFrameBuffers();
 
   void createCommandPool();
 
@@ -167,6 +175,8 @@ private:
   void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 
   void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
+  VkImageView createImageView(VkImage image, VkFormat format);
 
   /**
    * Creates a buffer.
@@ -286,17 +296,22 @@ private:
   std::vector<VkFence> inFlightFences;
   std::vector<VkFence> imagesInFlight;
 
+  // Vertex & index buffers
   VkBuffer vertexBuffer;
   VkDeviceMemory vertexBufferMemory;
   VkBuffer indexBuffer;
   VkDeviceMemory indexBufferMemory;
 
+  // Uniform buffers
   std::vector<VkBuffer> uniformBuffers;
   std::vector<VkDeviceMemory> uniformBuffersMemory;
 
   VkDescriptorPool descriptorPool;
   std::vector<VkDescriptorSet> descriptorSets;
 
+  // Texture mapping
   VkImage textureImage;
   VkDeviceMemory textureImageMemory;
+  VkImageView textureImageView;
+  VkSampler textureSampler;
 };

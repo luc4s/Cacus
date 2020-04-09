@@ -47,9 +47,6 @@ static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
  * A basic example showing how to create and init a window.
  */
 int main() {
-  // Read shader files
-  auto vertShaderCode = readFile("./vert.spv");
-  auto fragShaderCode = readFile("./frag.spv");
 
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -67,31 +64,35 @@ int main() {
   VkSurfaceKHR surface;
   glfwCreateWindowSurface(cacus.getInstance(), window, nullptr, &surface);
 
-  const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
-  };
-
-  const std::vector<uint16_t> indices = {
-    0, 1, 2, 2, 3, 0
-  };
-
+  // Read shader files
+  auto vertShaderCode = readFile("./vert.spv");
+  auto fragShaderCode = readFile("./frag.spv");
   cacus.setup(surface, vertShaderCode, fragShaderCode);
-  cacus.createMeshBuffers(vertices, indices);
 
   // Load texture
   int texWidth, texHeight, texChannels;
   stbi_uc* pixels = stbi_load("texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
   if (pixels) {
+    std::cout << texWidth << ", " << texHeight << ", " << texChannels << std::endl;
     cacus.loadTexture(texWidth, texHeight, texChannels, pixels);
     stbi_image_free(pixels);
   } else
     std::cerr << "Could not load texture :(" << std::endl;
 
-  const auto startTime = std::chrono::high_resolution_clock::now();
+  // Load mesh data
+  const std::vector<Vertex> vertices = {
+      {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+      {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+      {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+      {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+  };
 
+  const std::vector<uint16_t> indices = {
+    0, 1, 2, 2, 3, 0
+  };
+  cacus.createMeshBuffers(vertices, indices);
+
+  const auto startTime = std::chrono::high_resolution_clock::now();
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
 
