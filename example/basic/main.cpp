@@ -14,6 +14,9 @@
 #include <fstream>
 #include <vector>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -77,6 +80,15 @@ int main() {
 
   cacus.setup(surface, vertShaderCode, fragShaderCode);
   cacus.createMeshBuffers(vertices, indices);
+
+  // Load texture
+  int texWidth, texHeight, texChannels;
+  stbi_uc* pixels = stbi_load("texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+  if (pixels) {
+    cacus.loadTexture(texWidth, texHeight, texChannels, pixels);
+    stbi_image_free(pixels);
+  } else
+    std::cerr << "Could not load texture :(" << std::endl;
 
   const auto startTime = std::chrono::high_resolution_clock::now();
 

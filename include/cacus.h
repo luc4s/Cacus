@@ -136,6 +136,8 @@ public:
     const std::vector<Vertex> &newVertices,
     const std::vector<uint16_t> &newIndices);
 
+  void loadTexture(const int texWidth, const int texHeight, const int texChannels, const unsigned char *pixels);
+
 private:
   /**
    * Temporary functions that will be removed in the near future.
@@ -155,6 +157,16 @@ private:
   void createDescriptorSetLayout();
 
   void updateUniformBuffer(uint32_t currentImage);
+
+  void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+  
+  VkCommandBuffer beginSingleTimeCommands();
+
+  void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+
+  void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+  void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
   /**
    * Creates a buffer.
@@ -284,4 +296,7 @@ private:
 
   VkDescriptorPool descriptorPool;
   std::vector<VkDescriptorSet> descriptorSets;
+
+  VkImage textureImage;
+  VkDeviceMemory textureImageMemory;
 };
