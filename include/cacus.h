@@ -4,7 +4,7 @@
 #include <array>
 
 #define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
 typedef struct QueueFamilyIndicesStruct {
@@ -22,7 +22,6 @@ typedef struct SwapChainSupportDetailsStruct {
     std::vector<VkPresentModeKHR> presentModes;
 } SwapChainSupportDetails ;
 
-
 typedef struct VertexStruct {
   glm::vec3 pos;
   glm::vec3 color;
@@ -30,7 +29,6 @@ typedef struct VertexStruct {
 
   static VkVertexInputBindingDescription getBindingDescription() {
     VkVertexInputBindingDescription bindingDescription = {};
-
     bindingDescription.binding = 0;
     bindingDescription.stride = sizeof(VertexStruct);
     bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -58,6 +56,7 @@ typedef struct VertexStruct {
 
     return attributeDescriptions;
   }
+
 } Vertex;
 
 typedef struct UniformBufferObjectStruct {
@@ -145,7 +144,7 @@ public:
    */
   void createMeshBuffers(
     const std::vector<Vertex> &newVertices,
-    const std::vector<uint16_t> &newIndices);
+    const std::vector<uint32_t> &newIndices);
 
   void loadTexture(const int texWidth, const int texHeight, const int texChannels, const unsigned char *pixels);
 
@@ -267,7 +266,8 @@ private:
   size_t currentFrame;
 
   std::vector<Vertex> vertices;
-  std::vector<uint16_t> indices;
+  std::vector<uint32_t> indices;
+
   UniformBufferObject ubo;
 
   std::vector<char> vertexShader;
