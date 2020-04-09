@@ -3,6 +3,7 @@
 #include <iostream>
 
 #define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -73,7 +74,6 @@ int main() {
   int texWidth, texHeight, texChannels;
   stbi_uc* pixels = stbi_load("texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
   if (pixels) {
-    std::cout << texWidth << ", " << texHeight << ", " << texChannels << std::endl;
     cacus.loadTexture(texWidth, texHeight, texChannels, pixels);
     stbi_image_free(pixels);
   } else
@@ -81,16 +81,24 @@ int main() {
 
   // Load mesh data
   const std::vector<Vertex> vertices = {
-      {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-      {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-      {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-      {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+      {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+      {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+      {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+      {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
+
+      {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+      {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
+      {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
+      {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}
   };
 
   const std::vector<uint16_t> indices = {
-    0, 1, 2, 2, 3, 0
+      0, 1, 2, 2, 3, 0,
+      4, 5, 6, 6, 7, 4
   };
+
   cacus.createMeshBuffers(vertices, indices);
+  cacus.finalize();
 
   const auto startTime = std::chrono::high_resolution_clock::now();
   while (!glfwWindowShouldClose(window)) {
@@ -105,6 +113,7 @@ int main() {
 
     glm::mat4 proj = glm::perspective(
       glm::radians(45.0f), width / (float) height, 0.1f, 10.0f);
+
     proj[1][1] *= -1;
 
     const glm::mat4 model = glm::rotate(

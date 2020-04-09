@@ -3,6 +3,8 @@
 #include <vector>
 #include <array>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE 
 #include <glm/glm.hpp>
 
 typedef struct QueueFamilyIndicesStruct {
@@ -22,7 +24,7 @@ typedef struct SwapChainSupportDetailsStruct {
 
 
 typedef struct VertexStruct {
-  glm::vec2 pos;
+  glm::vec3 pos;
   glm::vec3 color;
   glm::vec2 texCoord;
 
@@ -41,7 +43,7 @@ typedef struct VertexStruct {
 
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
-    attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
     attributeDescriptions[0].offset = offsetof(VertexStruct, pos);
 
     attributeDescriptions[1].binding = 0;
@@ -120,9 +122,10 @@ public:
     init();
     createDescriptorSetLayout();
     createGraphicsPipeline();
-    createFrameBuffers();
     createCommandPool();
   }
+
+  void finalize();
 
   /**
    * Draws on surface.
@@ -152,6 +155,8 @@ private:
    */
   void init();
 
+  void preFinalize();
+
   void createGraphicsPipeline();
 
   void createFrameBuffers();
@@ -176,8 +181,9 @@ private:
 
   void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
-  VkImageView createImageView(VkImage image, VkFormat format);
+  VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
+  VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
   /**
    * Creates a buffer.
    */
@@ -314,4 +320,10 @@ private:
   VkDeviceMemory textureImageMemory;
   VkImageView textureImageView;
   VkSampler textureSampler;
+
+  // Depth buffering
+  VkImage depthImage;
+  VkDeviceMemory depthImageMemory;
+  VkImageView depthImageView;
+  VkFormat depthFormat;
 };
