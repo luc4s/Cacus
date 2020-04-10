@@ -69,16 +69,19 @@ class Cacus {
 public:
 
   /**
-   * Constructor
+   * Creates the instance without any extension enabled.
    */
-  Cacus(uint32_t width, uint32_t height);
+  Cacus();
 
   /**
+   * Instantiates rendering engine with given extensions.
+   *
    * @param extensionNames Array of required extensions
    * @param extensionCount Number of extensions
-   * @throw Error if extensions are not supported
+   * @throw runtime error if extensions are not supported
    */
-  Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_t extensionCount);
+  Cacus(const char **extensionNames, size_t extensionCount);
+
 
   /**
    * @return Vulkan instance pointer
@@ -257,8 +260,6 @@ private:
    */
   VkShaderModule createShaderModule(const std::vector<char> &code) const;
 
-
-  bool initialized;
 
   uint32_t width;
   uint32_t height;

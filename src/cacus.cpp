@@ -21,14 +21,11 @@ static const std::vector<const char*> deviceExtensions = {
 
 static const int MAX_FRAMES_IN_FLIGHT = 2;
 
-Cacus::Cacus(uint32_t width, uint32_t height) : Cacus(width, height, {}, 0) {}
+Cacus::Cacus() : Cacus(NULL, 0) {}
 
-Cacus::Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_t extensionCount) :
+Cacus::Cacus(const char **extensionNames, size_t extensionCount) :
   surface(VK_NULL_HANDLE),
   physicalDevice(VK_NULL_HANDLE),
-  initialized(false),
-  width(width),
-  height(height),
   currentFrame(0)
 {
   ubo = {};
@@ -49,15 +46,14 @@ Cacus::Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_
         }
       }
 
-      if (!found) {
-        throw std::runtime_error("Extension not supported.");
-      }
+      if (!found)
+        throw std::runtime_error("Extensions not supported.");
     }
   }
 
   // Check validation layers
   if (enableValidationLayers && !checkValidationLayersSupport())
-    throw std::runtime_error("Validation layer not available.");
+    throw std::runtime_error("Validation layers not available.");
 
 
   // Create vulkan instance
@@ -73,16 +69,15 @@ Cacus::Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_
   createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   createInfo.pApplicationInfo = &appInfo;
 
-
   createInfo.enabledExtensionCount = extensionCount;
   if (extensionCount > 0)
     createInfo.ppEnabledExtensionNames = extensionNames;
 
+  createInfo.enabledLayerCount = 0;
   if (enableValidationLayers) {
     createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
     createInfo.ppEnabledLayerNames = validationLayers.data();
-  } else
-    createInfo.enabledLayerCount = 0;
+  }
 
   VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
   if (result != VK_SUCCESS)
@@ -353,8 +348,6 @@ void Cacus::cleanupSwapChain() {
 void Cacus::init() {
   if (surface == VK_NULL_HANDLE)
     throw std::runtime_error("Surface has not been set");
-
-  initialized = true;
 
   // Get physical device
   uint32_t deviceCount = 0;
