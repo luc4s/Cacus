@@ -16,11 +16,6 @@ typedef struct QueueFamilyIndicesStruct {
   }
 } QueueFamilyIndices;
 
-typedef struct SwapChainSupportDetailsStruct {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-} SwapChainSupportDetails ;
 
 typedef struct VertexStruct {
   glm::vec3 pos;
@@ -65,6 +60,10 @@ typedef struct UniformBufferObjectStruct {
     glm::mat4 proj;
 } UniformBufferObject;
 
+/**
+ * Base class of the rendering engine, responsible for creating rendering context,
+ * handling validation layers and device selection.
+ */
 class Cacus {
 public:
 
@@ -82,7 +81,6 @@ public:
    */
   Cacus(const char **extensionNames, size_t extensionCount);
 
-
   /**
    * @return Vulkan instance pointer
    */
@@ -91,11 +89,12 @@ public:
   }
 
   /**
-   * @param Set the surface to use.
+   * Creates a suitable rendering context for the given surface.
    */
-  void setSurface(VkSurfaceKHR newSurface) {
-    surface = newSurface;
-  }
+  RenderingContext *createRenderingContext(
+    const VkSurfaceKHR &surface,
+    int width, int height) const;
+
 
   void getDimensions(int &outWidth, int &outHeight) {
     outWidth = width;
@@ -115,13 +114,10 @@ public:
   /**
    * Performs setup of Vulkan (to remove)
    */
-  void setup( VkSurfaceKHR newSurface,
-              std::vector<char> vertex,
+  void setup( std::vector<char> vertex,
               std::vector<char> fragment) {
-    surface = newSurface;
     vertexShader = vertex;
     fragmentShader = fragment;
-    init();
     createDescriptorSetLayout();
     createGraphicsPipeline();
     createCommandPool();
@@ -155,21 +151,12 @@ private:
   /**
    * Temporary functions that will be removed in the near future.
    */
-  void init();
 
   void preFinalize();
-
-  void createGraphicsPipeline();
-
-  void createFrameBuffers();
-
-  void createCommandPool();
 
   void createSyncObjects();
 
   void createCommandBuffers();
-
-  void createDescriptorSetLayout();
 
   void updateUniformBuffer(uint32_t currentImage);
 
@@ -214,7 +201,9 @@ private:
   /**
    * @return True if device support required extensions
    */
-  bool checkDeviceExtensionSupport(const VkPhysicalDevice &device) const;
+  bool checkDeviceExtensionSupport(
+    const VkPhysicalDevice &device,
+    const std::vector<const char*> &deviceExtensions) const;
 
   /**
    * @param device Device to check for suitability
@@ -275,33 +264,21 @@ private:
   std::vector<char> fragmentShader;
 
   VkInstance instance;
-  VkPhysicalDevice physicalDevice;
-  VkDevice device;
-  VkQueue graphicsQueue;
-  VkQueue presentQueue;
-  VkSurfaceKHR surface;
-  VkSwapchainKHR swapChain;
 
-  VkFormat swapChainImageFormat;
-  VkExtent2D swapChainExtent;
-
-  std::vector<VkImage> swapChainImages;
-  std::vector<VkImageView> swapChainImageViews;
-
-  VkDescriptorSetLayout descriptorSetLayout;
-  VkPipelineLayout pipelineLayout;
-  VkRenderPass renderPass;
-  VkPipeline graphicsPipeline;
-
-  std::vector<VkFramebuffer> swapChainFramebuffers;
-
-  VkCommandPool commandPool;
+  // VkCommandPool commandPool;
+  // VkDescriptorPool descriptorPool;
+/*
   std::vector<VkCommandBuffer> commandBuffers;
+  std::vector<VkDescriptorSet> descriptorSets;
 
   std::vector<VkSemaphore> imageAvailableSemaphores;
   std::vector<VkSemaphore> renderFinishedSemaphores;
   std::vector<VkFence> inFlightFences;
   std::vector<VkFence> imagesInFlight;
+
+  // Uniform buffers
+  std::vector<VkBuffer> uniformBuffers;
+  std::vector<VkDeviceMemory> uniformBuffersMemory;*/
 
   // Vertex & index buffers
   VkBuffer vertexBuffer;
@@ -309,22 +286,10 @@ private:
   VkBuffer indexBuffer;
   VkDeviceMemory indexBufferMemory;
 
-  // Uniform buffers
-  std::vector<VkBuffer> uniformBuffers;
-  std::vector<VkDeviceMemory> uniformBuffersMemory;
-
-  VkDescriptorPool descriptorPool;
-  std::vector<VkDescriptorSet> descriptorSets;
 
   // Texture mapping
   VkImage textureImage;
   VkDeviceMemory textureImageMemory;
   VkImageView textureImageView;
   VkSampler textureSampler;
-
-  // Depth buffering
-  VkImage depthImage;
-  VkDeviceMemory depthImageMemory;
-  VkImageView depthImageView;
-  VkFormat depthFormat;
 };

@@ -1,4 +1,8 @@
 target_sources(
 	cacus
 	PRIVATE
-	cacus.cpp)
+	Cacus.cpp
+  RenderingContext.cpp
+  CommandBuffer.cpp
+  SwapChain.cpp
+  utils.cpp)
