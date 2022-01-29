@@ -3,6 +3,8 @@ set(INSTALL_GTEST 0)
 
 add_subdirectory(googletest)
 
+find_package(glfw3 REQUIRED)
+
 add_executable(
     unit_tests
     simple.test.cpp)
@@ -10,5 +12,5 @@ add_executable(
 target_link_libraries(
     unit_tests
     cacus
-    glfw3
+    glfw
     gtest_main)

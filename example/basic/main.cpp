@@ -119,14 +119,14 @@ int main() {
   } else
     cerr << "Could not load texture :(" << endl;
 
-  //*
+  /*
   // Load mesh data
   vector<Vertex> vertices;
   vector<uint32_t> indices;
   loadModel(vertices, indices);
   std::cout << "Loaded " << vertices.size() << " vertices and " << indices.size() << " indices" << endl;
   //*/
-  /*
+  //*
   const std::vector<Vertex> vertices = {
     {{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
     {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
