@@ -8,3 +8,4 @@ repos:
       - id: uncrustify
       - id: cppcheck
       - id: cpplint
+        args: [--filter=-legal]
