@@ -1,11 +1,9 @@
+#include <glm.h>
 #include <vulkan/vulkan.h>
+
+#include <array>
 #include <optional>
 #include <vector>
-#include <array>
-
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
 
 typedef struct QueueFamilyIndicesStruct {
   std::optional<uint32_t> graphicsFamily;
@@ -17,10 +15,10 @@ typedef struct QueueFamilyIndicesStruct {
 } QueueFamilyIndices;
 
 typedef struct SwapChainSupportDetailsStruct {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-} SwapChainSupportDetails ;
+  VkSurfaceCapabilitiesKHR capabilities;
+  std::vector<VkSurfaceFormatKHR> formats;
+  std::vector<VkPresentModeKHR> presentModes;
+} SwapChainSupportDetails;
 
 typedef struct VertexStruct {
   glm::vec3 pos;
@@ -36,7 +34,8 @@ typedef struct VertexStruct {
     return bindingDescription;
   }
 
-  static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+  static std::array<VkVertexInputAttributeDescription, 3>
+  getAttributeDescriptions() {
     std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
 
     attributeDescriptions[0].binding = 0;
@@ -60,14 +59,13 @@ typedef struct VertexStruct {
 } Vertex;
 
 typedef struct UniformBufferObjectStruct {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+  glm::mat4 model;
+  glm::mat4 view;
+  glm::mat4 proj;
 } UniformBufferObject;
 
 class Cacus {
-public:
-
+ public:
   /**
    * Constructor
    */
@@ -78,21 +76,18 @@ public:
    * @param extensionCount Number of extensions
    * @throw Error if extensions are not supported
    */
-  Cacus(uint32_t width, uint32_t height, const char **extensionNames, size_t extensionCount);
+  Cacus(uint32_t width, uint32_t height, const char **extensionNames,
+        size_t extensionCount);
 
   /**
    * @return Vulkan instance pointer
    */
-  VkInstance getInstance() {
-    return instance;
-  }
+  VkInstance getInstance() { return instance; }
 
   /**
    * @param Set the surface to use.
    */
-  void setSurface(VkSurfaceKHR newSurface) {
-    surface = newSurface;
-  }
+  void setSurface(VkSurfaceKHR newSurface) { surface = newSurface; }
 
   void getDimensions(int &outWidth, int &outHeight) {
     outWidth = width;
@@ -102,7 +97,8 @@ public:
   /**
    * Set transform of current shape.
    */
-  void setTransform(const glm::mat4 &model, const glm::mat4 &view, const glm::mat4 &proj);
+  void setTransform(const glm::mat4 &model, const glm::mat4 &view,
+                    const glm::mat4 &proj);
 
   /**
    * Destructor.
@@ -112,9 +108,8 @@ public:
   /**
    * Performs setup of Vulkan (to remove)
    */
-  void setup( VkSurfaceKHR newSurface,
-              std::vector<char> vertex,
-              std::vector<char> fragment) {
+  void setup(VkSurfaceKHR newSurface, std::vector<char> vertex,
+             std::vector<char> fragment) {
     surface = newSurface;
     vertexShader = vertex;
     fragmentShader = fragment;
@@ -142,13 +137,13 @@ public:
    * @param newVertices vertices
    * @param newIndices indices
    */
-  void createMeshBuffers(
-    const std::vector<Vertex> &newVertices,
-    const std::vector<uint32_t> &newIndices);
+  void createMeshBuffers(const std::vector<Vertex> &newVertices,
+                         const std::vector<uint32_t> &newIndices);
 
-  void loadTexture(const int texWidth, const int texHeight, const int texChannels, const unsigned char *pixels);
+  void loadTexture(const int texWidth, const int texHeight,
+                   const int texChannels, const unsigned char *pixels);
 
-private:
+ private:
   /**
    * Temporary functions that will be removed in the near future.
    */
@@ -170,23 +165,33 @@ private:
 
   void updateUniformBuffer(uint32_t currentImage);
 
-  void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-  
+  void createImage(uint32_t width, uint32_t height, VkFormat format,
+                   VkImageTiling tiling, VkImageUsageFlags usage,
+                   VkMemoryPropertyFlags properties, VkImage &image,
+                   VkDeviceMemory &imageMemory);
+
   VkCommandBuffer beginSingleTimeCommands();
 
   void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
-  void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+  void transitionImageLayout(VkImage image, VkFormat format,
+                             VkImageLayout oldLayout, VkImageLayout newLayout);
 
-  void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+  void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width,
+                         uint32_t height);
 
-  VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+  VkImageView createImageView(VkImage image, VkFormat format,
+                              VkImageAspectFlags aspectFlags);
 
-  VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+  VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates,
+                               VkImageTiling tiling,
+                               VkFormatFeatureFlags features);
   /**
    * Creates a buffer.
    */
-  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+  void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                    VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                    VkDeviceMemory &bufferMemory);
 
   /**
    * Copy buffers.
@@ -196,7 +201,8 @@ private:
   /**
    * Returns the type of memory depending on application and buffer requirements
    */
-  uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+  uint32_t findMemoryType(uint32_t typeFilter,
+                          VkMemoryPropertyFlags properties) const;
 
   /**
    * Cleanup the swap chain
@@ -229,26 +235,30 @@ private:
    * @param device Physical device
    * @return Surface format and present modes for given device
    */
-  SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice &device) const;
+  SwapChainSupportDetails querySwapChainSupport(
+      const VkPhysicalDevice &device) const;
 
   /**
    * @param List of available formats
    * @return Chosen format
    */
-  VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats) const;
+  VkSurfaceFormatKHR chooseSwapSurfaceFormat(
+      const std::vector<VkSurfaceFormatKHR> &availableFormats) const;
 
   /**
    * @param List of available present modes
    * @return Preferred present mode
    */
-  VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes) const;
+  VkPresentModeKHR chooseSwapPresentMode(
+      const std::vector<VkPresentModeKHR> &availablePresentModes) const;
 
   /**
    * Chooses swap extent (resolution)
    * @param Possible resolutions
    * @return Preferred extent
    */
-  VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const;
+  VkExtent2D chooseSwapExtent(
+      const VkSurfaceCapabilitiesKHR &capabilities) const;
 
   /**
    * Create a shader module from byte code.
@@ -256,7 +266,6 @@ private:
    * @return Shader module
    */
   VkShaderModule createShaderModule(const std::vector<char> &code) const;
-
 
   bool initialized;
 

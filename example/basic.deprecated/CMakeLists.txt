@@ -3,7 +3,6 @@ add_executable(basic.deprecated main.cpp)
 find_package(glfw3 REQUIRED)
 
 target_link_libraries(basic.deprecated cacus glfw)
-target_include_directories(basic.deprecated PUBLIC ${CACUS_HEADERS})
 
 # Custom target to compile shaders (assumed glslc is available)
 add_custom_target(shaders

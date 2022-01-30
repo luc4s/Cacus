@@ -11,6 +11,4 @@ add_executable(
 
 target_link_libraries(
     unit_tests
-    cacus
-    glfw
-    gtest_main)
+    PRIVATE cacus glfw gtest_main)
