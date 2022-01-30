@@ -5,7 +5,6 @@ repos:
     hooks:
       - id: clang-format
         args: [--style=Google, -i]
-      - id: uncrustify
       - id: cppcheck
       - id: cpplint
         args: [--filter=-legal]
